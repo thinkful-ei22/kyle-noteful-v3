@@ -1,3 +1,10 @@
 language: node_js
 node_js: node
 services: mongodb
+deploy:
+  provider: heroku
+  api_key:
+    secure: M/t3uHu+lNaPV5bzFL3B562FlIPdgm4Z6JtIkMzAbTIkuniMXus0yjcpwhLA0m4LdhQzMJODu/aduNUuEOXd9zUU+VPIsZcxQk/V2qTam16FBju7xnUvIePEXiyeYUu3wMfjeojGlzkZSPTZePNFZR5Vm4sFttwzKkZOvBBekUvYZfs4zE77hoVOl5twacZkC/yeffnyR/B084jzXIJfsNqNraBi4B+bIFqe83N8DMpwcAgXBbYsBmKh0ieJRcIcqlZ16uMm/kezjp0GlPB3fpScjMK5XCPPiUAMJ9OjBbn0imnrNFEUEDNQUsr4184/tKAlwZEn8g7IqYxfyKLUJMk/cQzKGTRoIiBg84+QmSIbYVK/fISqrGmfv650FpGxpobxVFe2NR/DNr/At9ofnXFtidHBeZtS9Ncq2ELgHowQDBBF37fxGvjLjITn2lXlmlCKEUFSGGsRc4sDpg9x+qzbi7LfDU6VD/CMg7FO2sTE30OmSO969USQsy0gK27Fhst+DDsRAbW9eJjcsv+BGwUB56tOcMjY+79f2uTlv8yc1giFZIHcfi+8tC9uSt5kpRaTGREu1uW9MA4vX+TnQEtOMSa3Z99jFqfFf2439qEHSq2Zj86b08iZoM/vAIDsoZV0393h5GAl8ZEdLjZOATq3wv1QIuP8//GUeWxonrg=
+  app: kyle-noteful-app-v3
+  on:
+    repo: thinkful-ei22/kyle-noteful-v3
