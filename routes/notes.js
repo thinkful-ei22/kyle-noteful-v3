@@ -2,7 +2,6 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
-const { MONGODB_URI } = require('../config');
 const Note = require('../models/note');
 
 const router = express.Router();
