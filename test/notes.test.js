@@ -3,6 +3,7 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const mongoose = require('mongoose');
+const mongo = require('mongodb');
 
 const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
@@ -46,6 +47,7 @@ describe('Notes Router', function() {
         .then(([data, res]) => {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
+
           expect(res.body).to.be.an('array');
           expect(res.body).to.have.length(data.length);
         });
@@ -75,11 +77,12 @@ describe('Notes Router', function() {
           expect(res).to.be.json;
 
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.all.keys('id', 'title', 'content','folderId', 'createdAt', 'updatedAt');
 
           expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
           expect(res.body.content).to.equal(data.content);
+          expect(mongo.ObjectId(res.body.folderId)).to.eql(data.folderId);
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
@@ -160,7 +163,7 @@ describe('Notes Router', function() {
               expect(res).to.be.json;
 
               expect(res.body).to.be.an('object');
-              expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+              expect(res.body).to.have.keys('id', 'title', 'content','folderId', 'createdAt', 'updatedAt');
 
               // 3. check the server response against the update object
               expect(res.body.id).to.equal(data.id);
