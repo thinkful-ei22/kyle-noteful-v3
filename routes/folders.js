@@ -4,6 +4,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const Folder = require('../models/folder');
+const Note = require('../models/note');
 
 const router = express.Router();
 
@@ -121,7 +122,13 @@ router.delete('/:id', (req, res, next) => {
     return next(err);
   }
 
-  Folder.findByIdAndRemove(id)
+  Promise.all([
+    Folder.findByIdAndRemove(id),
+    Note.updateMany(
+      { folderId: id },
+      { $unset: { folderId: '' } }
+    )
+  ])
     .then(() => {
       res.sendStatus(204);
     })
