@@ -221,15 +221,172 @@ describe('Folders Router', function() {
 
   describe('PUT /api/folder/:id', function() {
 
-    it('should update the folder when provided valid data');
+    it('should update the folder when provided valid data', function() {
+      /** PLAN
+       * 1. get a folder from the db
+       * 2. make a chai put request with new valid data
+       * 3. confirm api response has proper status & attributes
+       * 4. get the updated folder info from the db
+       * 5. confirm api response matches the new db info
+       */
 
-    it('should respond with status 400 and an error message when `id` is not valid');
+      const validData = {
+        name: 'New Name'
+      };
+      
+      let data;
+      let res;
 
-    it('should respond with a 404 for an id that does not exist');
+      // 1. get a folder from the db
+      return Folder.findOne()
+        .then(_data => {
+          data = _data;
 
-    it('should return an error when missing `title` field');
+          // 2. make a chai put request with new valid data
+          return chai.request(app)
+            .put(`/api/folders/${data.id}`)
+            .send(validData);
+        })
+        .then(_res => {
+          res = _res;
 
-    it('should return an error when the `title` field is not unique');
+          //3. confirm api response has proper status & attributes
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.have.all.keys(['id', 'name', 'createdAt', 'updatedAt']);
+          
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.name).to.equal(validData.name);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.be.greaterThan(data.updatedAt);
+
+          // 4. get the updated folder info from the db
+          return Folder.findById(data.id);
+        })
+        .then(_data => {
+          data = _data;
+
+          // 5. confirm api response matches the new db info
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.name).to.equal(data.name);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+        });
+
+    });
+
+    it('should respond with status 400 and an error message when `id` is not valid', function() {
+      /** PLAN
+       * 1. set an invalid id
+       * 2. make a chai request to the invalid id
+       * 3. confirm that the response status is 400 and there is a message
+       */
+
+      // 1. set an invalid id
+      const invalidId = 'not-a-valid-id';
+      const validData = {
+        name: 'New Name'
+      };
+
+      // 2. make a chai request to the invalid id
+      return chai.request(app)
+        .put(`/api/folders/${invalidId}`)
+        .send(validData)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.key('message');
+        });
+    });
+
+    it('should respond with a 404 for an id that does not exist', function() {
+      /** PLAN
+       * 1. set a valid id that does not exist
+       * 2. send a chai request to the nonexistent id with valid data
+       * 3. confirm the response status is 404 and has a message
+       */
+
+      const nonExistantId = 'DOESNOTEXIST';
+      const validData = {
+        name: 'New Name'
+      };
+
+      return chai.request(app)
+        .put(`/api/folders/${nonExistantId}`)
+        .send(validData)
+        .then(res => {
+          expect(res).to.have.status(404);
+          expect(res).to.be.json;
+
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.key('message');
+        });
+    });
+
+    it('should return a 400 error when missing `name` field', function() {
+      /** PLAN
+       * 1. set a req.body that's missing the 'name' field
+       * 2. get an id from the db
+       * 3. make a chai request to that id with missing 'name' field
+       * 4. confirm the response status is 400 and has a message
+       */
+
+      // 1. set a req.body that's missing the 'name' field
+      const nameMissing = {
+        wrong: 'missing name field'
+      };
+
+      // 2. get an id from the db
+      return Folder.findOne()
+        .then(data => {
+
+          // 3. make a chai request to that id with missing 'name' field
+          return chai.request(app)
+            .put(`/api/folders/${data.id}`)
+            .send(nameMissing);
+        })
+        .then(res => {
+          // 4. confirm the response status is 400 and has a message
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.key('message');
+        });
+    });
+
+    it('should return an error when the `name` field is not unique', function() {
+      /** PLAN
+       * 1. get the name of a folder from the db
+       * 2. send a put request with that name
+       * 3. confirm that the error was returned properly with 400 status
+       */
+      const helpfulResponse = 'The folder name already exists';
+
+      return Folder.find()
+        .then(data => {
+          const duplicateName = {
+            name: data[0].name
+          };
+
+          return chai.request(app)
+            .put(`/api/folders/${data[1].id}`)
+            .send(duplicateName);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.key('message');
+
+          expect(res.body.message).to.equal(helpfulResponse);
+        });
+    });
   });
 
   describe('DELETE /api/folder/:id', function() {
