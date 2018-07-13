@@ -362,7 +362,7 @@ describe('Folders Router', function() {
     it('should return an error when the `name` field is not unique', function() {
       /** PLAN
        * 1. get the name of a folder from the db
-       * 2. send a put request with that name
+       * 2. send a put request with that name to a different folder
        * 3. confirm that the error was returned properly with 400 status
        */
       const helpfulResponse = 'The folder name already exists';
@@ -391,8 +391,56 @@ describe('Folders Router', function() {
 
   describe('DELETE /api/folder/:id', function() {
 
-    it('should delete an existing folder and respond with 204');
+    it('should delete an existing folder and respond with 204', function() {
+      /** PLAN
+       * 1. get a folder id from the db
+       * 2. make a chai del request with that id
+       * 3. confirm the res status is 204
+       * 4. make a db request for the id
+       * 5. confirm that it's not there
+       */
+      let data;
 
-    it('should respond with status 400 and an error message when `id` is not valid');
+      // 1. get a folder id from the db
+      return Folder.findOne()
+        .then(_data => {
+          data = _data;
+
+          // 2. make a chai del request with that id
+          return chai.request(app)
+            .delete(`/api/folders/${data.id}`);
+        })
+        .then(res => {
+          // 3. confirm the res status is 204
+          expect(res).to.have.status(204);
+
+          // 4. make a db request for the id
+          return Folder.findById(data.id);
+        })
+        .then(result => {
+          // 5. confirm that it's not there
+          expect(result).to.be.null;
+        });
+    });
+      
+    it('should respond with status 400 and an error message when `id` is not valid', function() {
+      /** PLAN
+       * 1. set an invalid id
+       * 2. make a chai delete request using that id
+       * 3. confirm the response is a 400 error with a message
+       */
+
+      const invalidId = 'not-a-valid-id';
+
+      return chai.request(app)
+        .delete(`/api/folders/${invalidId}`)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+
+          expect(res.body).to.be.an('object');
+          expect(res.body).to.include.key('message');
+        });
+    });
   });
 });
