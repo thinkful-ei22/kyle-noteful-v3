@@ -9,8 +9,10 @@ const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
 
 const Note = require('../models/note');
+const Folder = require('../models/folder');
 
 const seedNotes = require('../db/seed/notes');
+const seedFolders = require('../db/seed/folders');
 
 mongoose.Promise = global.Promise;
 
@@ -25,7 +27,10 @@ describe('Notes Router', function() {
   });
 
   beforeEach(function() {
-    return Note.insertMany(seedNotes);
+    return Promise.all([
+      Note.insertMany(seedNotes),
+      Folder.insertMany(seedFolders)
+    ]);
   });
 
   afterEach(function() {
@@ -56,6 +61,41 @@ describe('Notes Router', function() {
     it('should return a list with the correct right fields');
 
     it('should return correct search results for a searchTerm query');
+
+    it('should return only notes in the correct folder when filtered by folder', function() {
+      /** PLAN
+       * 1. get a folder id from the db
+       * 2. get all notes with that folderId from the db
+       * 3. make a chai request and pass in the folderId in a queryString
+       * 4. confirm the number of results is the same
+       * 5. confirm each note from the chai req has the correct folderId
+       */
+      let sampleFolder;
+
+      return Folder.findOne()
+        .then(_data => {
+          sampleFolder = _data;
+          const folderQuery = `?folderId=${sampleFolder.id}`;
+
+          return Promise.all([
+            Note.find({ folderId: sampleFolder.id }),
+            chai.request(app)
+              .get(`/api/notes${folderQuery}`)
+          ]);
+        })
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+
+          expect(res.body).to.be.an('array');
+          expect(res.body).to.have.length(data.length);
+
+          res.body.forEach(item => {
+            expect(item).to.be.an('object');
+            expect(item.folderId).to.equal(sampleFolder.id);
+          });
+        });
+    });
 
     it('should return an empty array for an incorrect query');
 

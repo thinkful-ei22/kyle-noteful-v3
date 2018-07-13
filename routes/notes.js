@@ -8,15 +8,27 @@ const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  const searchTerm = req.query.searchTerm;
+  const { searchTerm, folderId } = req.query;
 
   let filter = {};
 
+  if (searchTerm || folderId) {
+    filter.$and = [];
+  }
+
   if (searchTerm) {
-    filter.$or = [
-      { title: { $regex: searchTerm, $options: 'i' } },
-      { content: { $regex: searchTerm, $options: 'i' } }
-    ];
+    filter.$and.push(
+      { $or: [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { content: { $regex: searchTerm, $options: 'i' } }
+      ]}
+    );
+  }
+
+  if (folderId) {
+    filter.$and.push(
+      { folderId: folderId }
+    );
   }
 
   Note.find(filter)
