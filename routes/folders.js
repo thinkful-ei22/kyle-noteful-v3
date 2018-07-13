@@ -10,7 +10,8 @@ const router = express.Router();
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
   Folder.find()
-    .sort({ updatedAt: 'desc' })
+    .collation({locale: 'en' })
+    .sort({ name: 'asc' })
     .then(results => {
       res.json(results);
     })
@@ -36,7 +37,6 @@ router.get('/:id', (req, res, next) => {
       } else {
         next();
       }
-      
     })
     .catch(err => {
       next(err);
