@@ -2,13 +2,12 @@
 
 const mongoose = require('mongoose');
 
-const tagSchema = {
+const tagSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true
-  }
-};
+    unique: true }
+});
 
 tagSchema.set('timestamps', true);
 
