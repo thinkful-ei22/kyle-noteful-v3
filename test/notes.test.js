@@ -139,7 +139,8 @@ describe('Notes Router', function() {
     it('should create and return a new item when provided valid data', function() {
       const newItem = {
         'title': 'The best article about cats ever!',
-        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
+        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...',
+        'folderId': 'VALIDFOLDRID'
       };
 
       let res;
@@ -154,7 +155,7 @@ describe('Notes Router', function() {
           expect(res).to.be.json;
 
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys(['id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt']);
 
           return Note.findById(res.body.id);
         })
@@ -162,12 +163,15 @@ describe('Notes Router', function() {
           expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
           expect(res.body.content).to.equal(data.content);
+          expect(mongo.ObjectId(res.body.folderId)).to.eql(data.folderId);
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
     });
 
-    it('should return an error when missing "title" field');
+    it('should return a 400 error when missing "title" field');
+
+    it('should return a 400 error if the folderId is not valid');
 
   });
 
@@ -183,15 +187,16 @@ describe('Notes Router', function() {
        */
       const updateObj = {
         'title': 'updated title',
-        'content': 'updated content'
+        'content': 'updated content',
       };
       let data;
       let res;
 
       // 1. get a note ID from the db
-      return Note.findOne()
+      return Note.find()
         .then(_data => {
-          data = _data;
+          data = _data[0];
+          updateObj.folderId = _data[1].folderId;
 
           // 2. make a PUT request for that ID with an update object
           return chai.request(app)
@@ -209,6 +214,7 @@ describe('Notes Router', function() {
               expect(res.body.id).to.equal(data.id);
               expect(res.body.title).to.equal(updateObj.title);
               expect(res.body.content).to.equal(updateObj.content);
+              expect(mongo.ObjectId(res.body.folderId)).to.eql(updateObj.folderId);
 
               // 4. get the new version of that note from the db
               return Note.findById(res.body.id);
@@ -220,6 +226,7 @@ describe('Notes Router', function() {
               expect(res.body.id).to.equal(data.id);
               expect(res.body.title).to.equal(data.title);
               expect(res.body.content).to.equal(data.content);
+              expect(mongo.ObjectId(res.body.folderId)).to.eql(data.folderId);
               expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
               expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
             });
@@ -228,6 +235,8 @@ describe('Notes Router', function() {
     });
 
     it('should respond with status 400 and an error message when `id` is not valid');
+
+    it('should respond with status 400 and an error message when `folderId` is not valid');
 
     it('should respond with a 404 for an id that does not exist');
 
