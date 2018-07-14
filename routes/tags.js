@@ -60,7 +60,7 @@ router.post('/', (req, res, next) => {
 
   Tag.create(newTag)
     .then(response => {
-      res.location(`${req.headers.orignalUrl}/${response.body.id}`)
+      res.location(`http://${req.headers.host}/tags/${response.id}`)
         .status(201)
         .json(response);
     })
@@ -115,6 +115,12 @@ router.put('/:id', (req, res, next) => {
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
   const tagDeletePromise = Tag.findByIdAndRemove(id);
   const noteUpdatePromise = Note.updateMany(
     { tags: id },
@@ -126,7 +132,7 @@ router.delete('/:id', (req, res, next) => {
     noteUpdatePromise
   ])
     .then(response => {
-      if (response) {
+      if (response.body) {
         res.json(response);
       } else {
         res.sendStatus(204);
