@@ -9,9 +9,11 @@ const { TEST_MONGODB_URI } = require('../config');
 
 const Note = require('../models/note');
 const Folder = require('../models/folder');
+const Tag = require('../models/tag');
 
 const seedNotes = require('../db/seed/notes');
 const seedFolders = require('../db/seed/folders');
+const seedTags = require('../db/seed/tags');
 
 mongoose.Promise = global.Promise;
 
@@ -30,6 +32,8 @@ describe('Folders Router', function() {
       Note.insertMany(seedNotes),
       Folder.insertMany(seedFolders),
       Folder.createIndexes(),
+      Tag.insertMany(seedTags),
+      Tag.createIndexes()
     ]);
   });
 
