@@ -10,9 +10,11 @@ const { TEST_MONGODB_URI } = require('../config');
 
 const Note = require('../models/note');
 const Folder = require('../models/folder');
+const Tag = require('../models/tag');
 
 const seedNotes = require('../db/seed/notes');
 const seedFolders = require('../db/seed/folders');
+const seedTags = require('../db/seed/tags');
 
 mongoose.Promise = global.Promise;
 
@@ -29,7 +31,10 @@ describe('Notes Router', function() {
   beforeEach(function() {
     return Promise.all([
       Note.insertMany(seedNotes),
-      Folder.insertMany(seedFolders)
+      Folder.insertMany(seedFolders),
+      Folder.createIndexes(),
+      Tag.insertMany(seedTags),
+      Tag.createIndexes()
     ]);
   });
 
@@ -58,7 +63,21 @@ describe('Notes Router', function() {
         });
     });
 
-    it('should return a list with the correct right fields');
+    it('should return a list with the correct right fields', function() {
+      return chai.request(app)
+        .get('/api/notes')
+        .then(res => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+
+          expect(res.body).to.be.an('array');
+
+          res.body.forEach(note => {
+            expect(note).to.include.keys(['id', 'title', 'content', 'tags', 'createdAt', 'updatedAt']);
+            expect(note.tags).to.be.an('array');
+          });
+        });
+    });
 
     it('should return correct search results for a searchTerm query');
 
@@ -117,14 +136,19 @@ describe('Notes Router', function() {
           expect(res).to.be.json;
 
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.all.keys('id', 'title', 'content','folderId', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys(['id', 'title', 'content', 'folderId', 'tags', 'createdAt', 'updatedAt']);
 
           expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
           expect(res.body.content).to.equal(data.content);
+
           expect(mongo.ObjectId(res.body.folderId)).to.eql(data.folderId);
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+
+          res.body.tags.forEach(tag => {
+            expect(data.tags).to.contain(tag.id);
+          });
         });
     });
 
@@ -155,7 +179,7 @@ describe('Notes Router', function() {
           expect(res).to.be.json;
 
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys(['id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt']);
+          expect(res.body).to.have.keys(['id', 'title', 'content', 'folderId', 'tags', 'createdAt', 'updatedAt']);
 
           return Note.findById(res.body.id);
         })
@@ -208,7 +232,7 @@ describe('Notes Router', function() {
               expect(res).to.be.json;
 
               expect(res.body).to.be.an('object');
-              expect(res.body).to.have.keys('id', 'title', 'content','folderId', 'createdAt', 'updatedAt');
+              expect(res.body).to.have.keys('id', 'title', 'content','folderId', 'tags', 'createdAt', 'updatedAt');
 
               // 3. check the server response against the update object
               expect(res.body.id).to.equal(data.id);

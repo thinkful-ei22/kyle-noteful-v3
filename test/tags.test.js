@@ -20,7 +20,7 @@ mongoose.Promise = global.Promise;
 const expect = chai.expect;
 chai.use(chaiHttp);
 
-describe.only('Tags Router', function() {
+describe('Tags Router', function() {
 
   before(function() {
     return mongoose.connect(TEST_MONGODB_URI, { useNewUrlParser: true })
